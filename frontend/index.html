@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VoltFinder - EV Charging Station Discovery & Booking</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Leaflet CSS for Map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <!-- Leaflet Routing Machine CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+  <!-- FontAwesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/package/font-awesome/6.4.0/css/all.min.css">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Header / Navbar -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="logo">
+        <i class="fa-solid fa-bolt logo-icon"></i>
+        <span class="logo-text">Volt<span class="accent-text">Finder</span></span>
+      </div>
+      <nav class="main-nav">
+        <button class="nav-btn active" id="nav-finder-btn" data-target="finder-section">
+          <i class="fa-solid fa-map-location-dot"></i> Find Stations
+        </button>
+        <button class="nav-btn" id="nav-bookings-btn" data-target="bookings-section">
+          <i class="fa-solid fa-calendar-check"></i> My Bookings
+        </button>
+      </nav>
+      <div class="header-actions">
+        <button class="profile-btn" id="profile-trigger-btn">
+          <i class="fa-solid fa-car-side"></i> <span id="nav-profile-name">My EV Profile</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Layout -->
+  <main class="app-main">
+    <!-- 1. Station Finder View -->
+    <section class="app-section active" id="finder-section">
+      <div class="finder-layout">
+        <!-- Sidebar: Filter & List -->
+        <aside class="finder-sidebar">
+          <!-- Search and Filter Panel -->
+          <div class="search-filter-panel">
+            <div class="search-bar-container">
+              <i class="fa-solid fa-magnifying-glass search-icon"></i>
+              <input type="text" id="station-search-input" placeholder="Search station name, address...">
+            </div>
+            
+            <div class="filters-container">
+              <div class="filter-group">
+                <label for="charger-type-filter"><i class="fa-solid fa-plug"></i> Charger Type</label>
+                <select id="charger-type-filter">
+                  <option value="">All Types</option>
+                  <option value="Rapid DC">Rapid DC (100kW+)</option>
+                  <option value="Fast DC">Fast DC (30kW-60kW)</option>
+                  <option value="Fast AC">Fast AC (22kW)</option>
+                  <option value="Slow AC">Slow AC (7.4kW)</option>
+                </select>
+              </div>
+
+              <div class="filter-group">
+                <label for="connector-filter"><i class="fa-solid fa-charging-station"></i> Connector</label>
+                <select id="connector-filter">
+                  <option value="">All Connectors</option>
+                  <option value="CCS2">CCS2 (Standard DC)</option>
+                  <option value="Type 2">Type 2 (Standard AC)</option>
+                  <option value="CHAdeMO">CHAdeMO</option>
+                </select>
+              </div>
+
+              <div class="filter-group">
+                <label for="status-filter"><i class="fa-solid fa-circle-info"></i> Status</label>
+                <select id="status-filter">
+                  <option value="">All Statuses</option>
+                  <option value="Available">Available</option>
+                  <option value="Occupied">Occupied</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Station Listing -->
+          <div class="station-list-container">
+            <div class="list-header">
+              <span class="results-count" id="results-count-text">Loading stations...</span>
+              <button class="reset-filters-btn" id="reset-filters-btn" style="display: none;">Reset Filters</button>
+            </div>
+            <div class="station-list" id="stations-list">
+              <!-- Dynamically populated station cards -->
+              <div class="loading-state">
+                <i class="fa-solid fa-circle-notch fa-spin"></i>
+                <p>Loading charging stations...</p>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Map Workspace -->
+        <div class="map-container">
+          <div id="map"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Bookings Dashboard View -->
+    <section class="app-section" id="bookings-section">
+      <div class="bookings-layout">
+        <div class="bookings-header">
+          <div class="title-area">
+            <h1>My Charging Bookings</h1>
+            <p>View, update, or cancel your active charging sessions.</p>
+          </div>
+          <div class="booking-filters">
+            <button class="status-tab active" data-status="All">All</button>
+            <button class="status-tab" data-status="Active">Active</button>
+            <button class="status-tab" data-status="Completed">Completed</button>
+            <button class="status-tab" data-status="Cancelled">Cancelled</button>
+          </div>
+        </div>
+        
+        <div class="bookings-grid" id="bookings-grid">
+          <!-- Dynamically populated booking cards -->
+          <div class="loading-state">
+            <i class="fa-solid fa-circle-notch fa-spin"></i>
+            <p>Loading bookings...</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modals and Drawers Container -->
+
+  <!-- A. Station Details Drawer (Slides out from right) -->
+  <div class="drawer" id="station-details-drawer">
+    <div class="drawer-overlay" id="drawer-close-overlay"></div>
+    <div class="drawer-content">
+      <button class="drawer-close-btn" id="drawer-close-btn">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <div class="drawer-body" id="drawer-body-content">
+        <!-- Dynamically loaded station details -->
+      </div>
+    </div>
+  </div>
+
+  <!-- B. Booking Form Modal -->
+  <div class="modal" id="booking-modal">
+    <div class="modal-overlay" id="booking-modal-overlay"></div>
+    <div class="modal-container">
+      <div class="modal-header">
+        <h2>Book a Charging Slot</h2>
+        <button class="modal-close-btn" id="booking-modal-close-btn">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="booking-summary-header">
+          <h3 id="modal-station-name">Station Name</h3>
+          <p id="modal-charger-details">Charger Model - Speed kw</p>
+        </div>
+
+        <form id="booking-form" novalidate>
+          <input type="hidden" id="booking-station-id">
+          <input type="hidden" id="booking-charger-id">
+          <input type="hidden" id="edit-booking-id"> <!-- Present only during update -->
+
+          <div class="form-grid">
+            <!-- Part 1: Date & Time Scheduler -->
+            <div class="form-section-title">1. Schedule Date & Time</div>
+            
+            <div class="form-group">
+              <label for="booking-date"><i class="fa-solid fa-calendar"></i> Select Date</label>
+              <input type="date" id="booking-date" required>
+              <div class="error-feedback" id="date-error"></div>
+            </div>
+
+            <div class="form-group time-scheduler-group">
+              <label><i class="fa-solid fa-clock"></i> Select Time Slot</label>
+              <p class="field-hint">Time slots are for 1.5 - 2 hour sessions. Booked slots are locked 🔒.</p>
+              <div class="time-slots-grid" id="time-slots-grid">
+                <!-- Dynamically loaded interactive slots -->
+                <div class="slots-info-text">Please select a date to view available time slots.</div>
+              </div>
+              <input type="hidden" id="selected-time-slot" required>
+              <div class="error-feedback" id="slot-error"></div>
+            </div>
+
+            <!-- Part 2: User and Vehicle Details -->
+            <div class="form-section-title">2. Driver & Vehicle Information</div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="booking-username"><i class="fa-solid fa-user"></i> Full Name</label>
+                <input type="text" id="booking-username" placeholder="e.g. Rahul Sharma" required>
+                <div class="error-feedback" id="username-error"></div>
+              </div>
+              <div class="form-group">
+                <label for="booking-phone"><i class="fa-solid fa-phone"></i> Phone Number</label>
+                <input type="tel" id="booking-phone" placeholder="10-digit mobile number" required>
+                <div class="error-feedback" id="phone-error"></div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="booking-email"><i class="fa-solid fa-envelope"></i> Email Address</label>
+              <input type="email" id="booking-email" placeholder="e.g. rahul@example.com" required>
+              <div class="error-feedback" id="email-error"></div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="booking-vehicle-model"><i class="fa-solid fa-car"></i> EV Model</label>
+                <input type="text" id="booking-vehicle-model" placeholder="e.g. Tata Nexon EV Max" required>
+                <div class="error-feedback" id="vehicle-model-error"></div>
+              </div>
+              <div class="form-group">
+                <label for="booking-vehicle-number"><i class="fa-solid fa-hashtag"></i> Registration Number</label>
+                <input type="text" id="booking-vehicle-number" placeholder="e.g. KA-03-MR-1234" required>
+                <div class="error-feedback" id="vehicle-number-error"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="booking-cancel-btn">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="booking-submit-btn">Confirm Booking</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- C. EV Profile Settings Modal -->
+  <div class="modal" id="profile-modal">
+    <div class="modal-overlay" id="profile-modal-overlay"></div>
+    <div class="modal-container profile-container">
+      <div class="modal-header">
+        <h2>My EV Driver Profile</h2>
+        <button class="modal-close-btn" id="profile-modal-close-btn">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p class="profile-info-text">Save your details here. We'll automatically fill them in whenever you book a charging slot!</p>
+        
+        <form id="profile-form">
+          <div class="form-group">
+            <label for="profile-name"><i class="fa-solid fa-user"></i> Full Name</label>
+            <input type="text" id="profile-name" placeholder="Rahul Sharma">
+          </div>
+          <div class="form-group">
+            <label for="profile-email"><i class="fa-solid fa-envelope"></i> Email Address</label>
+            <input type="email" id="profile-email" placeholder="rahul@example.com">
+          </div>
+          <div class="form-group">
+            <label for="profile-phone"><i class="fa-solid fa-phone"></i> Phone Number</label>
+            <input type="tel" id="profile-phone" placeholder="9876543210">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="profile-vehicle-model"><i class="fa-solid fa-car"></i> EV Model</label>
+              <input type="text" id="profile-vehicle-model" placeholder="Tata Nexon EV Max">
+            </div>
+            <div class="form-group">
+              <label for="profile-vehicle-number"><i class="fa-solid fa-hashtag"></i> Registration No.</label>
+              <input type="text" id="profile-vehicle-number" placeholder="KA-03-MR-4567">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="profile-clear-btn">Clear Settings</button>
+            <button type="submit" class="btn btn-primary">Save Profile</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- D. Success / Booking Animation Modal -->
+  <div class="modal" id="success-modal">
+    <div class="modal-overlay"></div>
+    <div class="modal-container success-container">
+      <div class="success-animation-wrapper">
+        <!-- Beautiful pulsing battery charging success view -->
+        <div class="battery-charging-animation">
+          <div class="battery-body">
+            <div class="battery-fill"></div>
+            <div class="battery-bolt"><i class="fa-solid fa-bolt"></i></div>
+          </div>
+          <div class="battery-tip"></div>
+        </div>
+        <div class="success-checkmark-circle">
+          <div class="success-checkmark"></div>
+        </div>
+      </div>
+      <h2 id="success-title">Booking Confirmed!</h2>
+      <p id="success-message">Your EV charging slot has been reserved successfully.</p>
+      <div class="success-details-card" id="success-details-card">
+        <!-- Details dynamically inserted -->
+      </div>
+      <button class="btn btn-primary" id="success-close-btn">Done</button>
+    </div>
+  </div>
+
+  <!-- Toast Notification System -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Leaflet Map JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- Leaflet Routing Machine JS -->
+  <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+
+  <!-- Main Application Coordinator (ES6 Module) -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

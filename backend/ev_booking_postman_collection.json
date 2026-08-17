@@ -1,0 +1,414 @@
+{
+  "info": {
+    "_postman_id": "8b51d8b9-50df-4ceb-afe7-b14539a9e798",
+    "name": "EV Charging Station Finder & Booking API",
+    "description": "Collection of API endpoints for testing the EV Charging Station Discovery and Booking backend.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "System Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/health",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "health"
+          ]
+        },
+        "description": "Check if backend server is healthy and running."
+      },
+      "response": []
+    },
+    {
+      "name": "Stations",
+      "item": [
+        {
+          "name": "Get All Stations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/stations",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "stations"
+              ]
+            },
+            "description": "Retrieve all charging stations in the database."
+          },
+          "response": []
+        },
+        {
+          "name": "Search Stations by Keyword",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/stations?search=nexus",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "stations"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "nexus"
+                }
+              ]
+            },
+            "description": "Search stations by name or address keyword (case insensitive)."
+          },
+          "response": []
+        },
+        {
+          "name": "Filter Stations by Charger Type",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/stations?chargerType=Rapid DC",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "stations"
+              ],
+              "query": [
+                {
+                  "key": "chargerType",
+                  "value": "Rapid DC"
+                }
+              ]
+            },
+            "description": "Filter stations containing a specific charger power type (e.g. 'Rapid DC', 'Fast DC', 'Slow AC')."
+          },
+          "response": []
+        },
+        {
+          "name": "Filter Stations by Connector Type",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/stations?connectorType=CCS2",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "stations"
+              ],
+              "query": [
+                {
+                  "key": "connectorType",
+                  "value": "CCS2"
+                }
+              ]
+            },
+            "description": "Filter stations containing a specific connector configuration (e.g. 'CCS2', 'Type 2', 'CHAdeMO')."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Station Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/stations/station-1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "stations",
+                "station-1"
+              ]
+            },
+            "description": "Get detailed specs and live chargers availability for a specific station."
+          },
+          "response": []
+        },
+        {
+          "name": "Register New Station (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Tesla Supercharger - Mall Road\",\n  \"address\": \"Mall Road Parking Level 2, New Delhi, Delhi 110001\",\n  \"latitude\": 28.6850,\n  \"longitude\": 77.2150,\n  \"operating_hours\": \"24/7\",\n  \"contact_number\": \"+91 99999 88888\",\n  \"chargers\": [\n    { \"id\": \"ts1-c1\", \"type\": \"Rapid DC\", \"connector\": \"CCS2\", \"powerKW\": 250, \"status\": \"Available\", \"pricePerKWh\": 25.0 }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/stations",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "stations"
+              ]
+            },
+            "description": "Register a new EV charging station dynamically into the database."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Bookings",
+      "item": [
+        {
+          "name": "Get All Bookings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/bookings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "bookings"
+              ]
+            },
+            "description": "Fetch all booking records."
+          },
+          "response": []
+        },
+        {
+          "name": "Check Slot Availability",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/bookings/check/availability?stationId=station-1&chargerId=s1-c1&date=2026-08-17",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "bookings",
+                "check",
+                "availability"
+              ],
+              "query": [
+                {
+                  "key": "stationId",
+                  "value": "station-1"
+                },
+                {
+                  "key": "chargerId",
+                  "value": "s1-c1"
+                },
+                {
+                  "key": "date",
+                  "value": "2026-08-17"
+                }
+              ]
+            },
+            "description": "Checks which slots are already booked on a charger for a date."
+          },
+          "response": []
+        },
+        {
+          "name": "Create a Successful Booking",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data && jsonData.data.id) {",
+                  "    pm.collectionVariables.set(\"booking_id\", jsonData.data.id);",
+                  "    console.log(\"Saved booking_id environment variable: \" + jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stationId\": \"station-1\",\n  \"chargerId\": \"s1-c1\",\n  \"userName\": \"Rahul Sharma\",\n  \"userEmail\": \"rahul@example.com\",\n  \"userPhone\": \"9876543210\",\n  \"vehicleModel\": \"Tata Nexon EV Max\",\n  \"vehicleNumber\": \"KA-03-MR-4567\",\n  \"date\": \"2026-08-18\",\n  \"timeSlot\": \"12:00 - 14:00\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/bookings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "bookings"
+              ]
+            },
+            "description": "Send a valid request to reserve a slot. If successful, it automatically saves the booking ID to the collection variables for subsequent update/fetch/cancel tests."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Booking - Double Booking (Conflict Test)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stationId\": \"station-1\",\n  \"chargerId\": \"s1-c1\",\n  \"userName\": \"Suresh Kumar\",\n  \"userEmail\": \"suresh@example.com\",\n  \"userPhone\": \"9898989898\",\n  \"vehicleModel\": \"Hyundai Ioniq 5\",\n  \"vehicleNumber\": \"KA-51-MM-9999\",\n  \"date\": \"2026-08-18\",\n  \"timeSlot\": \"12:00 - 14:00\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/bookings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "bookings"
+              ]
+            },
+            "description": "Resends a duplicate slot request. Should throw 409 Conflict error."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Booking - Missing Fields (Bad Request Test)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stationId\": \"station-1\",\n  \"chargerId\": \"s1-c1\",\n  \"userName\": \"\",\n  \"userEmail\": \"bad-email-format\",\n  \"userPhone\": \"9876543210\",\n  \"vehicleModel\": \"MG ZS EV\",\n  \"vehicleNumber\": \"\",\n  \"date\": \"2026-08-18\",\n  \"timeSlot\": \"12:00 - 14:00\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/bookings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "bookings"
+              ]
+            },
+            "description": "Sends empty fields and bad email format to verify 400 Bad Request validations."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Booking Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/bookings/{{booking_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "bookings",
+                "{{booking_id}}"
+              ]
+            },
+            "description": "Retrieve the exact details of the booking ID saved in variables."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Booking Info",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vehicleModel\": \"Tata Nexon EV Prime\",\n  \"vehicleNumber\": \"KA-03-MR-9999\",\n  \"timeSlot\": \"16:00 - 18:00\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/bookings/{{booking_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "bookings",
+                "{{booking_id}}"
+              ]
+            },
+            "description": "Modify the vehicle model, license plate, or reschedule time slot. Includes conflict checking."
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Booking",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/bookings/{{booking_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "bookings",
+                "{{booking_id}}"
+              ]
+            },
+            "description": "Cancel the booking (soft-delete status transition to 'Cancelled'). Releases the time slot."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "booking_id",
+      "value": "booking-placeholder-id",
+      "type": "string"
+    }
+  ]
+}
